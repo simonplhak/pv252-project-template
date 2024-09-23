@@ -41,3 +41,44 @@ test('locate alert', async ({ page }) => {
   await page.getByRole('alert').click();
   await expect(page.getByRole('alert')).not.toBeVisible();
 });
+
+// tests for nomads.com
+test('pypi: search', async ({ page }) => {
+  await page.goto('https://pypi.org/');
+  await expect(page.getByRole('heading', { name: 'Find, install and publish' })).toBeInViewport();
+  await page.getByPlaceholder('Search projects').click();
+  await page.getByPlaceholder('Search projects').fill('kindwise');
+  await page.getByRole('button', { name: 'Search' }).click();
+  await expect(page.getByRole('link', { name: 'kindwise-api-client 0.6.0' })).toBeInViewport();
+});
+
+test('pypi: package detail', async ({ page }) => {
+  await page.goto('https://pypi.org/search/?q=kindwise');
+  await expect(page.getByRole('link', { name: 'kindwise-api-client 0.6.0' })).toBeInViewport();
+  await page.getByRole('link', { name: 'kindwise-api-client 0.6.0' }).click();
+  await expect(page.getByRole('heading', { name: 'kindwise-api-client' })).toBeInViewport();
+  await expect(page.getByText('pip install kindwise-api-')).toBeInViewport();
+  await expect(page.getByRole('link', { name: 'Project description. Focus' })).toBeInViewport();
+});
+
+test('pypi: sponsors page', async ({ page }) => {
+  await page.goto('https://pypi.org/');
+  await page.getByRole('link', { name: 'Sponsors', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Support PyPI and related' })).toBeInViewport();
+  await page.getByRole('heading', { name: 'Support PyPI and related' }).click();
+  const page1Promise = page.waitForEvent('popup');
+  await page.getByRole('link', { name: 'Become a sponsor ' }).click();
+  const page1 = await page1Promise;
+  await expect(page1.getByRole('heading', { name: 'Sponsor the PSF' })).toBeInViewport();
+});
+
+test('pypi: registration', async ({ page }) => {
+  await page.goto('https://pypi.org/');
+  await page.getByRole('link', { name: 'Register' }).click();
+  await expect(page.getByRole('heading', { name: 'Create an account on PyPI' })).toBeInViewport();
+  await expect(page.getByPlaceholder('Your name')).toBeInViewport();
+  await expect(page.getByPlaceholder('Your email address')).toBeInViewport();
+  await expect(page.getByPlaceholder('Select a username')).toBeInViewport();
+  await expect(page.getByPlaceholder('Select a password')).toBeVisible();
+  await expect(page.getByPlaceholder('Confirm password')).toBeVisible();
+});
