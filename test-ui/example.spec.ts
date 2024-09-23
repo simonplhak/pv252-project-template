@@ -3,5 +3,5 @@ import { test } from "./coverage_wrapper";
 
 test("find-watman", async ({ page }) => {  
   await page.goto("/");
-  await expect(page.getByAltText("This is watman")).toBeInViewport();
+  await expect(page.getByAltText("This is super watman")).toBeInViewport();
 });
