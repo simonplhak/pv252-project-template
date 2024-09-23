@@ -54,8 +54,8 @@ test('pypi: search', async ({ page }) => {
 
 test('pypi: package detail', async ({ page }) => {
   await page.goto('https://pypi.org/search/?q=kindwise');
-  await expect(page.getByRole('link', { name: 'kindwise-api-client 0.6.0' })).toBeInViewport();
-  await page.getByRole('link', { name: 'kindwise-api-client 0.6.0' }).click();
+  await expect(page.getByRole('link', { name: /kindwise-api-client \d+\.\d+\.\d+/ })).toBeInViewport();
+  await page.getByRole('link', { name: /kindwise-api-client \d+\.\d+\.\d+/ }).click();
   await expect(page.getByRole('heading', { name: 'kindwise-api-client' })).toBeInViewport();
   await expect(page.getByText('pip install kindwise-api-')).toBeInViewport();
   await expect(page.getByRole('link', { name: 'Project description. Focus' })).toBeInViewport();
