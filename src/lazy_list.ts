@@ -1,7 +1,7 @@
 const template = document.createElement("template");
 template.innerHTML = `
 <style>
-div.list {
+#list {
   height: var(--height);
   width: var(--width);  
   border: var(--border);
@@ -43,23 +43,19 @@ export class LazyList<T> extends HTMLElement {
 
   // The index of the first visible data item.
   #visiblePosition: number = 0;
+  #toShow: number = 20;
 
   // The amount of space that needs to be shown before the first visible item.
-  #topOffset: number = 0;
   #topOffsetElement: HTMLElement;
   // The amount of space that needs to be shown after the last visible item.
-  #bottomOffset: number = 0;
   #bottomOffsetElement: HTMLElement;
+  #elementHeight: number = 350;
 
   // The container that stores the spacer elements and the slot where items are inserted.
   #listElement: HTMLElement;
 
   static register() {
     customElements.define("lazy-list", LazyList);
-  }
-
-  constructor() {
-    super();
   }
 
   connectedCallback() {
@@ -72,18 +68,39 @@ export class LazyList<T> extends HTMLElement {
       this.shadowRoot.querySelector<HTMLElement>("#spacer-bottom")!;
     this.#listElement = this.shadowRoot.querySelector<HTMLElement>("#list")!;
 
-    this.#listElement.onscroll = () => {
-      console.log(this.#listElement.scrollTop);
-    };
+    this.#listElement.onscroll = () => this.#onScroll();  
+  }
+
+  #onScroll() {
+    const visiblePosition = Math.floor(this.#listElement.scrollTop / this.#elementHeight);
+    if (visiblePosition !== this.#visiblePosition) {
+      this.#visiblePosition = visiblePosition;
+      this.#render();
+    }
+  }
+
+  #render() {
+    const endPosition = Math.min(this.#visiblePosition + this.#toShow, this.#data.length);
+
+    while (this.firstChild) {
+      this.removeChild(this.firstChild);
+    }
+
+    for (let i = this.#visiblePosition; i < endPosition; i++) {
+      this.appendChild(this.#renderFunction(this.#data[i]));
+    }
+    this.#topOffsetElement.style.height = `${this.#visiblePosition * this.#elementHeight}px`;
+    this.#bottomOffsetElement.style.height = `${(this.#data.length - (this.#visiblePosition + this.#toShow)) * this.#elementHeight}px`;
   }
 
   setData(data: T[]) {
     this.#data = data;
-    // TODO: Data changed, re-draw content.
+    this.#onScroll();
+    this.#render();
   }
 
   setRenderer(renderer: Renderer<T>) {
     this.#renderFunction = renderer;
-    // TODO: Renderer changed, re-draw content.
+    this.#render();
   }
 }
