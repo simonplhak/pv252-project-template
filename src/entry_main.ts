@@ -30,11 +30,30 @@ interface UpdateMessage {
   value: boolean,
 }
 
+let welcomeMessage: WelcomeMessage | null = null;
+
+const compute_xy = (index: number): Point => {
+  const x = Math.floor(index / welcomeMessage!.x);
+  const y = index % welcomeMessage!.x;
+  return {x: x, y: y};
+}
+
 // Create a websocket connection. 
 // More info at https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
 const socket = new WebSocket("ws:socket.zavazadlo.unsigned-short.com");
 socket.onmessage = (m) => {
-  console.log(m)
+  if (!welcomeMessage) {
+    welcomeMessage = JSON.parse(m.data);
+    welcomeMessage!.data.forEach((value, index) => {
+      const point = compute_xy(index);
+      canvas.setPixel(point.x, point.y, value === 1);
+    });
+  } else {
+    const updateMessages: UpdateMessage[] = JSON.parse(m.data);
+    updateMessages.forEach((updateMessage) => {
+      canvas.setPixel(updateMessage.point.x, updateMessage.point.y, updateMessage.value);
+    });
+  }
 }
 
 // Example of how to use the canvas element:
@@ -42,7 +61,10 @@ let canvas = new SocketCanvasElement();
 canvas.width = 128;
 canvas.height = 128;
 canvas.ondraw = (x,y) => {
-  console.log(x,y);
+  if (!welcomeMessage) {
+    return;
+  }
+  socket.send(JSON.stringify({point: {x,y}, value: canvas.getValue()}));
 }
 document.querySelector("#container")!.appendChild(canvas);
 
@@ -51,4 +73,11 @@ setTimeout(() => {
   for (let x=0; x<128; x++) {
     canvas.setPixel(x,x,true);
   }
-})
+});
+
+// Sending update message with the 
+setInterval(() => {
+  if (socket.readyState === WebSocket.OPEN && welcomeMessage) {
+    socket.send(JSON.stringify({point: {x: 0, y: 0}, value: welcomeMessage!.data[0] === 1}));
+  }
+}, 600);

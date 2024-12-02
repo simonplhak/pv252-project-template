@@ -17,6 +17,7 @@ export class SocketCanvasElement extends FASTElement {
     context: CanvasRenderingContext2D | undefined;
 
     is_clicked: boolean = false;
+    mode = 'pen';
 
     ondraw: ((x: number, y: number) => void) | null = null; 
 
@@ -52,6 +53,20 @@ export class SocketCanvasElement extends FASTElement {
         this.context!.fillRect(Math.round(SCALE_FACTOR * x), Math.round(SCALE_FACTOR * y), SCALE_FACTOR, SCALE_FACTOR);
     }
 
+    setMode(mode: string) {
+        this.mode = mode;
+    }
+
+    getValue() {
+        if (this.mode === 'pen') {
+            return true;
+        } else if (this.mode === 'erase') {
+            return false;
+        } else {
+            throw new Error(`Unknown mode: ${this.mode}`);
+        }
+
+    }
 }
 
 const socketCanvasTemplate = html<SocketCanvasElement>`
@@ -64,6 +79,8 @@ canvas {
 }
 </style>
 <canvas ${ref('canvas')} width='${(x) => (x.width ?? 0) * SCALE_FACTOR}' height='${(x) => (x.height ?? 0) * SCALE_FACTOR}'></canvas>
+<button @click="${(x, c) => x.setMode('pen')}">Pen</button>
+<button @click="${(x, c) => x.setMode('erase')}">Erase</button>
 `
 
 SocketCanvasElement.define({
